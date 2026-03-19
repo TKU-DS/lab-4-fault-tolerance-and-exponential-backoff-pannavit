@@ -51,7 +51,7 @@ def upload_with_backoff(payload):
     
     for attempt in range(1, MAX_RETRIES + 1):
         success, status = cloud_api_mock(payload)
-        
+        sleep_time = 0
         if success:
             print(f"    -> [Success] {status} on attempt {attempt}")
             return True
@@ -61,22 +61,23 @@ def upload_with_backoff(payload):
         if attempt < MAX_RETRIES:
             # TODO 1: Calculate Exponential Backoff
             # Hint: backoff = BASE_DELAY * (2 ** (attempt - 1))
-            
+            backoff = BASE_DELAY * (2 ** attempt)
             
             # TODO 2: Add Jitter (Randomness)
             # Hint: Use random.uniform(0, 0.5) to generate jitter
-            
+            jitter = random.uniform(0, 0.5)
             
             # TODO 3: Calculate total sleep time and pause the execution
             # Hint: sleep_time = backoff + jitter
+            sleep_time = backoff + jitter
             
-            pass # Remove this pass when implementing
-            
+        print(f"sleep time = {sleep_time}")
     # If we exhaust all retries, do not crash!
     print("    -> [Fatal] Max retries reached. Triggering DLQ fallback.")
     
     # TODO 4: Call the DLQ function to save the payload locally
-    
+    save_to_dlq(payload)
+
     return False
 
 if __name__ == "__main__":
@@ -88,6 +89,8 @@ if __name__ == "__main__":
     test_payloads = [
         {"sensor": "temp", "value": 25.4},
         {"sensor": "temp", "value": 26.1},
+        {"sensor": "temp", "value": 27.1},
+        {"sensor": "temp", "value": 28.1},
         {"sensor": "temp", "value": 25.9}
     ]
     
